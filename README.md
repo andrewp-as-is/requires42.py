@@ -26,20 +26,20 @@ command|`usage`
 #### Examples
 ```bash
 $ export REQUIRES42_TOKEN=XXX # https://requires42.com/token/
+$ cd path/to/repo
 $ requires42 . > requirements.txt
 ```
 
 python api:
 ```python
-import requests
-
+url = 'https://api.requires42.com/requires'
 headers = {'Authorization': 'Token REQUIRES42_TOKEN'}
+
 data = dict(imports=['django','requests','sqlalchemy'])
-requests.post('https://api.requires42.com/requires',headers=headers,data=data)
+requests.post(url,headers=headers,data=data)
 
-headers = {'Authorization': 'Token REQUIRES42_TOKEN'}
 data = dict(files=[open('file.py').read()])
-requests.post('http://127.0.0.1:8000/requires',headers=headers,data=data)
+requests.post(url,headers=headers,data=data)
 ```
 
 #### Links
