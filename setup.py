@@ -1,12 +1,8 @@
-from setuptools import setup
+import setuptools
 
-setup(
+setuptools.setup(
     name='requires42',
-    version='2020.5.30',
-    install_requires=[
-        'setuptools',
-    ],
-    scripts=[
-        'scripts/requires42',
-    ],
+    install_requires=open('requirements.txt').read().splitlines(),
+    packages=setuptools.find_packages(),
+    scripts=['scripts/requires42']
 )

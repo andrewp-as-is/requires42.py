@@ -10,25 +10,28 @@ usage() {
 
 [[ $# != 1 ]] && usage
 
+IFS=
 cd "$1" || exit
 
-temp1="$(mktemp)" || exit
-temp2="$(mktemp)" || exit
-temp3="$(mktemp)" || exit
+[[ -z "$REQUIRES42_TOKEN" ]] && echo "ERROR: unknown REQUIRES42_TOKEN
 
-(
-    find . -type f -name "*.py" -type f -maxdepth 1 | cut -c3- | rev | cut -c4- | rev
-    find . -type f -name "__init__.py" -type f -maxdepth 2 | sed 's#/[^/]*$##' | cut -c3-
-) > "$temp1" || exit
-(
-    find . -type f -name "*.py" -exec cat {} \; | grep ^'import ' | grep -v ^'#' | awk '{print $2}'
-    find . -type f -name "*.py" -exec cat {} \; | grep ^'from ' | grep ' import' | grep -v ^'#' | grep -v ^'from \.' | awk '{print $2}'
-) | grep -v ^$  | sort | awk -F '.' '{print $1}' | uniq > "$temp2"
+export REQUIRES42_TOKEN=SECRET # https://requires42.com/token" 1>&2 && exit 1
 
-awk 'FNR==NR{array[$0];next}{if ($0 in array) next;print $0}' "$temp1" "$temp2" > "$temp3"
-curl -s -X POST -H "Authorization: Token $REQUIRES42_TOKEN" -H "Content-Type: text/plain" --data-binary "@$temp3" https://api.requires42.com/requires; exit=$?
-rm -f "$temp1" "$temp2" "$temp3" 2> /dev/null
-exit $exit
+set -- curl --fail -s -X POST -H "Authorization: Token $REQUIRES42_TOKEN"
 
+files="$(find "$PWD" -type f -name "*.py" -type f)" || exit
+[[ -n "$files" ]] && while IFS= read f; do
+    [[ "$f" == "$PWD"/setup.py ]] && continue
+    [[ "$f" == "$PWD"/tests/* ]] && continue
+    set -- "$@" -F "file[]=@$f"
+done <<< "$files"
 
+set -- "$@" https://api.requires42.com/requires
 
+out="$("$@" 2>&1)"; exit=$?
+[[ $exit != 0 ]] && { echo "$out" 1>&2 && exit $exit; }
+[[ -n "$out" ]] && while IFS= read l; do
+    name="$(echo "$l" | awk -F '=' '{print $1}')"
+    [ -e "$name"/__init__.py ] || [ -e "$name".py ] && continue
+    echo $l
+done <<< "$out";:
