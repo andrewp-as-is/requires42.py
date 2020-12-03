@@ -17,7 +17,7 @@ cd "$1" || exit
 
 export REQUIRES42_TOKEN=SECRET # https://requires42.com/token" 1>&2 && exit 1
 
-set -- curl --fail -s -X POST -H "Authorization: Token $REQUIRES42_TOKEN"
+set -- curl --fail --connect-timeout 5 --max-time 10 -s -X POST -H "Authorization: Token $REQUIRES42_TOKEN"
 
 files="$(find "$PWD" -type f -name "*.py" -type f)" || exit
 [[ -n "$files" ]] && while IFS= read f; do
